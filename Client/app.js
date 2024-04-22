@@ -141,7 +141,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           };
 
           try {
-            const response = await fetch("http://127.0.0.1:5000/predict", options);
+            const response = await fetch("https://10.21.24.62:5000/predict", options);
             const data = await response.json();
 
             // Handle the result as needed
@@ -171,7 +171,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           };
 
           try {
-            const response = await fetch("http://127.0.0.1:5000/suggest", options);
+            const response = await fetch("https://10.21.24.62:5000/suggest", options);
             const data = await response.json();
 
             // Handle the result as needed
@@ -200,13 +200,14 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           };
 
           try {
-            const response = await fetch("http://127.0.0.1:5000/repocheck", options);
+            const response = await fetch("https://10.21.24.62:5000/repocheck", options);
             const data = await response.json();
 
             // Handle the result as needed
             console.log("Result:", data.result);
+            console.log("Dict:", data.dict);
 
-            return data.result;
+            return { result: data.result, dict: data.dict };
           } catch (error) {
             console.error("Error:", error);
             throw error;
@@ -1246,8 +1247,8 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           console.log("Target Element:", targetElement);
 
           // Add loading screen iframe along with the original content
-          
-          targetElement.innerHTML = '<iframe style="margin-bottom:2rem;width:100%;height:18rem;border:none;" src="https://swethareddy53.github.io/Harmonize_loader/"></iframe>' + originalContent;
+
+          targetElement.innerHTML = '<iframe style="margin-bottom:2rem;width:100%;height:18rem;border:none;" src="https://myst9.github.io/harmonize-frontend/"></iframe>' + originalContent;
         }
 
         // Hide loading screen
@@ -1271,26 +1272,33 @@ parcelRequire = (function (modules, cache, entry, globalName) {
             console.log("Message received in content script:", message);
 
             if (message.url.startsWith("https://github.com/")) {
-              setTimeout(function() {
-                showLoadingScreen();
-             }, 1500);            
               console.log("yes it is github");
               try {
                 const cachedData = await getDataFromCache(message.url);
-
                 if (cachedData && Date.now() < cachedData.expiresAt) {
-                  console.log("Result from cache:", cachedData.data);
+                  console.log("Result from cache:", cachedData.data.result);
                   // Store the cached result globally
-                  repoScoreResult = cachedData.data;
+                  repoScoreResult = cachedData.data.result;
+                  // Display the toxicity graph using cached dictionary
+                  displayToxicityGraph(cachedData.data.dict);
                 } else {
-                  var result = await getreposcore_s(message.url);
-                  result = result * 100;
-                  result = Number(result).toFixed(2);
-                  console.log("Result from API:", result);
-                  // Save the result to cache with expiration time
-                  saveDataToCache(message.url, result);
+                  setTimeout(function () {
+                    showLoadingScreen();
+                  }, 1500);
+                  const { result, dict } = await getreposcore_s(message.url);
+                  const formattedResult = (result * 100).toFixed(2);
+                  console.log("Result from API:", formattedResult);
+                  // Save the result and dictionary to cache with expiration time
+                  const cacheData = {
+                    result: formattedResult,
+                    dict: dict
+                  };
+                  saveDataToCache(message.url, cacheData);
                   // Store the result globally
-                  repoScoreResult = result;
+                  repoScoreResult = formattedResult;
+                  console.log("Dictionary from API:", dict);
+                  // Display the toxicity graph
+                  displayToxicityGraph(dict);
                 }
                 initializeButton(); // Call initializeButton
               } catch (error) {
@@ -1301,6 +1309,70 @@ parcelRequire = (function (modules, cache, entry, globalName) {
             }
           });
         }
+
+        async function displayToxicityGraph(data) {
+          try {
+              // Extract users and toxicity scores from the dictionary
+              const users = Object.keys(data);
+              const toxicities = Object.values(data);
+      
+              // Create a new canvas element
+              const canvas = document.createElement("canvas");
+              canvas.id = "chartid"; // Set the id attribute
+              canvas.classList.add("chartjs-render-monitor"); // Add the required class
+              canvas.width = 750; // Set the width
+              canvas.height = 375; // Set the height
+              canvas.style.cssText = `
+                  position: fixed;
+                  border-radius: 20px;
+                  right: 10px;
+                  top: 200px;
+                  height: 300px;
+                  overflow: scroll;
+                  width: 600px;
+                  background-color: white;
+                  color: black;
+                  border: 1px solid white;
+                  padding: 8px;
+                  z-index: 2000;
+                  visibility: visible;
+                  max-height: 600px;
+                  max-width: 600px;
+                  display: block;
+              `; // Set the CSS styles
+      
+              // Append the canvas to the document body
+              document.body.appendChild(canvas);
+      
+              // Get the context of the canvas
+              const ctx = canvas.getContext("2d");
+      
+              // Create the chart using Chart.js
+              new Chart(ctx, {
+                  type: 'bar',
+                  data: {
+                      labels: users,
+                      datasets: [{
+                          label: 'Toxicity Score',
+                          data: toxicities,
+                          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                          borderColor: 'rgba(255, 99, 132, 1)',
+                          borderWidth: 1
+                      }]
+                  },
+                  options: {
+                      scales: {
+                          y: {
+                              beginAtZero: true
+                          }
+                      }
+                  }
+              });
+      
+          } catch (error) {
+              console.error("Error:", error);
+          }
+      }
 
         function initializeButton() {
           // Create Get Score Button
