@@ -1,0 +1,23 @@
+{
+  "name": "Harmonize",
+  "version": "2.0.1",
+  "description": " A tool to detect, detoxify and alert you regarding toxic comments in GitHub. Choose the repositories you want to work on wisely.",
+  "main": "app.js",
+  "scripts": {
+    "jsdoc": "jsdoc -c jsdoc.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/swethareddy53/Harmonize_frontend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/swethareddy53/Harmonize_frontend/issues"
+  },
+  "homepage": "https://github.com/swethareddy53/Harmonize_frontend#readme",
+  "dependencies": {
+    "jsdoc": "^4.0.2"
+  }
+}
