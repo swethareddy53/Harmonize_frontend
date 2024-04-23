@@ -9,7 +9,7 @@ relativePath = ".\ca.pem"
 absolutePath = objFSO.GetAbsolutePathName(relativePath)
 
 ' Display the absolute path
-WScript.Echo "Absolute Path: " & absolutePath
+'WScript.Echo "Absolute Path: " & absolutePath
 
 
 objShell.ShellExecute "cmd.exe", "/c timeout /t 5 && certutil.exe -addstore root """ & absolutePath & """ && timeout /t 5", "", "runas", 1
