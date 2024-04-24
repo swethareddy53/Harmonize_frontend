@@ -1,6 +1,6 @@
 # Harmonize_frontend
 
-Click on this [link](https://cs21b043.github.io/install_frontend) to install, configure and load your chrome extension all with a button click!!!
+Click on this [link](https://cs21b043.github.io/install_harmonize) to install, configure and load your chrome extension all with a button click!!!
 
 Step 1: Click the link and download the batch file(windows users only)
 Step 2: Double Click/Run the batch file
