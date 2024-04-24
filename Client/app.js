@@ -1275,15 +1275,18 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 
             if (message.url.startsWith("https://github.com/")) {
               console.log("yes it is github");
+              let userdict, scoredict;
               try {
                 const cachedData = await getDataFromCache(message.url);
                 if (cachedData && Date.now() < cachedData.expiresAt) {
                   console.log("Result from cache:", cachedData.data.result);
                   // Store the cached result globally
                   repoScoreResult = cachedData.data.result;
+                  userdict = cachedData.data.dict;
+                  scoredict = cachedData.data.score_ranges;
                   // Display the toxicity graph using cached dictionary
-                  displayToxicityGraph(cachedData.data.dict);
-                  displayScoreRangesGraph(cachedData.data.score_ranges);
+                  //displayToxicityGraph(cachedData.data.dict);
+                  //displayScoreRangesGraph(cachedData.data.score_ranges);
                 } else {
                   setTimeout(function () {
                     showLoadingScreen();
@@ -1302,19 +1305,55 @@ parcelRequire = (function (modules, cache, entry, globalName) {
                   // Store the result globally
                   repoScoreResult = formattedResult;
                   console.log("Dictionary from API:", dict);
+                  userdict = dict;
+                  scoredict = score_ranges;
                   // Display the toxicity graph
-                  displayToxicityGraph(dict);
-                  displayScoreRangesGraph(score_ranges);
+                  //displayToxicityGraph(newdict);
+                  //displayScoreRangesGraph(score_ranges);
                 }
-                initializeButton(); // Call initializeButton
+                createScoreBar(repoScoreResult); // Call initializeButton
               } catch (error) {
                 console.error("Error:", error);
               } finally {
+                console.log(userdict);
+                console.log(scoredict);
                 hideLoadingScreen()
+                setTimeout(function () {
+                  showRepoScoreResult(repoScoreResult, userdict, scoredict);
+                }, 1600);
               }
             }
           });
         }
+
+
+        async function showRepoScoreResult(repoScore, userdict, scoredict) {
+          try {
+              // Serialize both dictionaries into a format that can be passed via URL
+              const serializedUserDict = encodeURIComponent(JSON.stringify(userdict));
+              const serializedScoreDict = encodeURIComponent(JSON.stringify(scoredict));
+              
+              // Construct the URL with both dictionaries as query parameters
+              const htmlURL = `https://myst9.github.io/harmonize-frontend/results.html?score=${repoScore}&userdict=${serializedUserDict}&scoredict=${serializedScoreDict}`;
+              console.log(htmlURL);
+              // Replace the iframe with the new URL
+              //document.getElementsByClassName("Box-sc-g0xbh4-0 yfPnm")[0].innerHTML = `<iframe style="margin-bottom:2rem;width:100%;height:18rem;border:none;" src="${htmlURL}"></iframe>`;
+              // Save the original content
+          originalContent = document.getElementsByClassName("Box-sc-g0xbh4-0 yfPnm")[0].innerHTML;
+
+          // Find the target element with class "Box-sc-g0xbh4-0 yfPnm"
+          var targetElement = document.getElementsByClassName("Box-sc-g0xbh4-0 yfPnm")[0];
+          console.log("Target Element:", targetElement);
+
+          // Add loading screen iframe along with the original content
+
+          // Add loading screen iframe along with the original content
+        targetElement.innerHTML = `<iframe id="resultFrame" style="margin-bottom:2rem;width:100%;height:40rem;border:none;" src="${htmlURL}"></iframe>` + originalContent;
+          } catch (error) {
+              console.error("Error", error);
+          }
+      
+      }      
 
         async function displayToxicityGraph(data) {
           try {
@@ -1478,50 +1517,50 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           // });
 
           // Create Result Box
-          var resultBox = document.createElement("div");
-          resultBox.id = "resultBox";
-          resultBox.style.position = "fixed";
-          resultBox.style.borderRadius = "100px";
-          resultBox.style.right = "10px";
-          resultBox.style.bottom = "60px";
-          resultBox.style.backgroundColor = "blue";
-          resultBox.style.color = "yellow";
-          resultBox.style.padding = "10px";
-          resultBox.style.zIndex = 1000;
-          resultBox.style.display = "none"; // Change display property to 'block' to make it visible
-          resultBox.style.visibility = "visible";
+        //   var resultBox = document.createElement("div");
+        //   resultBox.id = "resultBox";
+        //   resultBox.style.position = "fixed";
+        //   resultBox.style.borderRadius = "100px";
+        //   resultBox.style.right = "10px";
+        //   resultBox.style.bottom = "60px";
+        //   resultBox.style.backgroundColor = "blue";
+        //   resultBox.style.color = "yellow";
+        //   resultBox.style.padding = "10px";
+        //   resultBox.style.zIndex = 1000;
+        //   resultBox.style.display = "none"; // Change display property to 'block' to make it visible
+        //   resultBox.style.visibility = "visible";
 
-          if (repoScoreResult !== null) {
-            resultBox.textContent = `Repo's Toxicity Score: ${repoScoreResult}`;
-            resultBox.style.display = "block"; // Make the resultBox is visible
-            createScoreBar(repoScoreResult);
-          } else {
-            // If result is not available
-            console.log("Result not available");
-          }
-          // Append resultBox to the body
-          document.body.appendChild(resultBox);
+        //   if (repoScoreResult !== null) {
+        //     resultBox.textContent = `Repo's Toxicity Score: ${repoScoreResult}`;
+        //     resultBox.style.display = "block"; // Make the resultBox is visible
+        //     createScoreBar(repoScoreResult);
+        //   } else {
+        //     // If result is not available
+        //     console.log("Result not available");
+        //   }
+        //   // Append resultBox to the body
+        //   //document.body.appendChild(resultBox);
 
-          // Append getScoreButton to the body
-          // document.body.appendChild(getScoreButton);
+        //   // Append getScoreButton to the body
+        //   // document.body.appendChild(getScoreButton);
         }
 
         function createScoreBar(score) {
           var scoreBar = document.createElement("div");
           scoreBar.className = "score-bar";
-          scoreBar.style.position = "fixed";
+          scoreBar.style.position = "absolute";
           scoreBar.style.border = "1px solid #000";
           scoreBar.style.width = "200px";
           scoreBar.style.height = "20px";
           scoreBar.style.right = "10px";
-          scoreBar.style.top = "150px";
+          scoreBar.style.top = "80px";
 
           var scorePoint = document.createElement("div");
           scorePoint.className = "score-point";
           scorePoint.style.position = "absolute";
           scorePoint.style.height = "100%";
-          scorePoint.style.width = "2px";
-          scorePoint.style.backgroundColor = "black";
+          scorePoint.style.width = "5px";
+          scorePoint.style.backgroundColor = "white";
           scorePoint.style.left = (score / 100) * 200 + "px"; //score indicator
 
           var greenWidth = 33.33;
@@ -1561,11 +1600,11 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           message.style.textAlign = "center";
 
           if (score <= 33.33) {
-            message.textContent = "It is OK";
+            message.textContent = "Low";
           } else if (score <= 66.66) {
-            message.textContent = "Not Ideal";
+            message.textContent = "Medium";
           } else {
-            message.textContent = "Avoid";
+            message.textContent = "High";
           }
 
           scoreBar.appendChild(message);
